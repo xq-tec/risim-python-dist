@@ -39,9 +39,14 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Run uv-test.ps1
+      - name: Install Cygwin
+        uses: cygwin/cygwin-install-action@711d29f3da23c9f4a1798e369a6f01198c13b11a # v6
+        with:
+          packages: autoconf automake libtool make
+
+      - name: Run build.ps1
         shell: pwsh
-        run: ./uv-test.ps1
+        run: ./build.ps1
 
       # - name: Upload python-windows.zip
       #   uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
