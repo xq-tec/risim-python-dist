@@ -1,0 +1,50 @@
+# Builds the Windows Python zip produced by `.\build.ps1` and uploads `python-windows.zip`.
+name: python-windows.zip
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - windows-test
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.run_id }}
+  cancel-in-progress: true
+
+env:
+  FORCE_COLOR: 1
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout (with submodule)
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Set up MSVC (x64)
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+        with:
+          arch: x64
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          enable-cache: true
+
+      - name: Run uv-test.ps1
+        shell: pwsh
+        run: ./uv-test.ps1
+
+      # - name: Upload python-windows.zip
+      #   uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      #   with:
+      #     name: python-windows
+      #     path: python-windows.zip
