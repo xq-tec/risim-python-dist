@@ -1,0 +1,3 @@
+[submodule "python-build-standalone"]
+	path = python-build-standalone
+	url = https://github.com/astral-sh/python-build-standalone.git
