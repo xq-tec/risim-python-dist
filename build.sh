@@ -10,12 +10,13 @@ BUILD_DIR=$REPO_ROOT/python-build-standalone
 UNPACK_DIR=$BUILD_DIR/dist/$VARIANT
 LIB_DIR=$UNPACK_DIR/python/install/lib
 
-FULL_DIST_ARCHIVE=$BUILD_DIR/dist/cpython-${VERSION}*-$TARGET-$VARIANT*.tar.zst
+FULL_DIST_ARCHIVE=$BUILD_DIR/dist/cpython.tar.zst
 # Only run the Python build if the distribution archive does not exist
 if [ ! -f $FULL_DIST_ARCHIVE ] ; then
   rm -rf $BUILD_DIR/dist
   cd $BUILD_DIR
   uv run --no-dev build.py --target-triple $TARGET --python cpython-$VERSION --options $VARIANT
+  mv $BUILD_DIR/dist/cpython-${VERSION}*-$TARGET-$VARIANT*.tar.zst $FULL_DIST_ARCHIVE
 fi
 rm -rf $UNPACK_DIR
 mkdir -p $UNPACK_DIR
