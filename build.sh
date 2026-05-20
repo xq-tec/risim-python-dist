@@ -12,7 +12,7 @@ LIB_DIR=$UNPACK_DIR/python/install/lib
 
 FULL_DIST_ARCHIVE=$BUILD_DIR/dist/cpython-${VERSION}*-$TARGET-$VARIANT*.tar.zst
 # Only run the Python build if the distribution archive does not exist
-if ! find -name "$FULL_DIST_ARCHIVE" > /dev/null 2>&1; then
+if [ ! -f $FULL_DIST_ARCHIVE ] ; then
   rm -rf $BUILD_DIR/dist
   cd $BUILD_DIR
   uv run --no-dev build.py --target-triple $TARGET --python cpython-$VERSION --options $VARIANT

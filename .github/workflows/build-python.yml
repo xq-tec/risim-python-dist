@@ -1,11 +1,10 @@
-# Builds the Linux-based Python zip produced by `./build.sh` and uploads `python-linux.zip`.
-name: python-linux.zip
+name: build-python
 
 on:
   workflow_dispatch:
   push:
-    branches:
-      - master
+    tags:
+      - "v*"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.run_id }}
@@ -23,11 +22,20 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
-      - name: Checkout (with submodule)
+      - name: Cache Git LFS objects
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: .git/lfs
+          key: lfs-${{ hashFiles('.lfsconfig') }}-${{ github.sha }}
+          restore-keys: |
+            lfs-${{ hashFiles('.lfsconfig') }}-
+
+      - name: Checkout (with submodules)
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
           submodules: recursive
+          lfs: true
 
       - name: Set up uv
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
@@ -39,8 +47,34 @@ jobs:
           chmod +x build.sh
           ./build.sh
 
-      - name: Upload python-linux.zip
+      - name: Upload distribution artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: python-linux
-          path: python-linux.zip
+          name: python-dist
+          path: |
+            python-linux.tar.gz
+            python-windows.zip
+            windows/python314.lib
+          if-no-files-found: error
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Download distribution artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: python-dist
+          path: dist
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
+        with:
+          files: |
+            dist/python-linux.tar.gz
+            dist/python-windows.zip
+            dist/windows/python314.lib
+          generate_release_notes: true
