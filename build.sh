@@ -8,8 +8,9 @@ VARIANT=lto
 REPO_ROOT=$(realpath $(dirname $0))
 BUILD_DIR=$REPO_ROOT/python-build-standalone
 UNPACK_DIR=$BUILD_DIR/dist/$VARIANT
+LIB_DIR=$UNPACK_DIR/python/install/lib
 
-FULL_DIST_ARCHIVE=$BUILD_DIR/dist/cpython-$VERSION*-$TARGET-$VARIANT*.tar.zst
+FULL_DIST_ARCHIVE=$BUILD_DIR/dist/cpython-${VERSION}*-$TARGET-$VARIANT*.tar.zst
 # Only run the Python build if the distribution archive does not exist
 if ! find -name "$FULL_DIST_ARCHIVE" > /dev/null 2>&1; then
   rm -rf $BUILD_DIR/dist
@@ -30,15 +31,15 @@ bin/pip3.14 install $REPO_ROOT/vunit
 find -name __pycache__ -exec rm -rf {} +
 find -name '*.dist-info' -exec rm -rf {} +
 
-cd $UNPACK_DIR/python/install/lib
-strip libpython$VERSION.so.1.0
+cd $LIB_DIR
+strip libpython${VERSION}.so.1.0
 # In lib/: keep only libpython${VERSION}.so.1.0 and python${VERSION}/
 find . -mindepth 1 -maxdepth 1 \
   ! -name libpython${VERSION}.so.1.0 \
   ! -name python${VERSION} \
   -exec rm -rf {} +
 
-cd $UNPACK_DIR/python/install/lib/python${VERSION}
+cd $LIB_DIR/python${VERSION}
 rm -rf \
   config-${VERSION}-x86_64-linux-gnu \
   test \
@@ -46,10 +47,20 @@ rm -rf \
   idlelib \
   ensurepip
 
-cd $UNPACK_DIR/python/install/lib/python${VERSION}/site-packages
+cd $LIB_DIR/python${VERSION}/site-packages
 rm -rf pip/ "pip-*.dist-info/"
 
 # Zip the distribution
 cd $UNPACK_DIR/python/install
 tar -czf python-linux.tar.gz lib/
 mv python-linux.tar.gz $REPO_ROOT/
+
+# Build the Windows distribution
+
+cd $REPO_ROOT
+rm -rf python-windows python-windows.zip
+unzip -d python-windows windows/python-${VERSION}*-embed-amd64.zip
+cd $LIB_DIR/python${VERSION}/site-packages
+zip -r $REPO_ROOT/python-windows/python${VERSION//./} *
+cd $REPO_ROOT/python-windows
+zip -r $REPO_ROOT/python-windows.zip .
