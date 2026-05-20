@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+set -euxo pipefail
 
 VERSION=3.14
 TARGET=x86_64_v2-unknown-linux-gnu
@@ -9,16 +9,26 @@ REPO_ROOT=$(realpath $(dirname $0))
 BUILD_DIR=$REPO_ROOT/python-build-standalone
 UNPACK_DIR=$BUILD_DIR/dist/$VARIANT
 
-rm -rf $BUILD_DIR/dist/*
-cd $BUILD_DIR
-uv run --no-dev build.py --target-triple $TARGET --python cpython-$VERSION --options $VARIANT
+FULL_DIST_ARCHIVE=$BUILD_DIR/dist/cpython-$VERSION*-$TARGET-$VARIANT*.tar.zst
+# Only run the Python build if the distribution archive does not exist
+if ! find -name "$FULL_DIST_ARCHIVE" > /dev/null 2>&1; then
+  rm -rf $BUILD_DIR/dist
+  cd $BUILD_DIR
+  uv run --no-dev build.py --target-triple $TARGET --python cpython-$VERSION --options $VARIANT
+fi
+rm -rf $UNPACK_DIR
 mkdir -p $UNPACK_DIR
-tar -C $UNPACK_DIR -xf $BUILD_DIR/dist/cpython-$VERSION*-$TARGET-$VARIANT*.tar.zst
+tar -C $UNPACK_DIR -xf $FULL_DIST_ARCHIVE
+
+# Install VUnit and its dependencies
+
+cd $UNPACK_DIR/python/install
+bin/pip3.14 install $REPO_ROOT/vunit
 
 # Remove unnecessary files and directories
 
-cd $UNPACK_DIR/python/install
-rm -rf bin/ include/ share/
+find -name __pycache__ -exec rm -rf {} +
+find -name '*.dist-info' -exec rm -rf {} +
 
 cd $UNPACK_DIR/python/install/lib
 strip libpython$VERSION.so.1.0
@@ -41,5 +51,5 @@ rm -rf pip/ "pip-*.dist-info/"
 
 # Zip the distribution
 cd $UNPACK_DIR/python/install
-zip -r python-linux.zip lib/
-mv python-linux.zip $REPO_ROOT/
+tar -czf python-linux.tar.gz lib/
+mv python-linux.tar.gz $REPO_ROOT/
