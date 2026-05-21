@@ -50,7 +50,7 @@ rm -rf \
   ensurepip
 
 cd $LIB_DIR/python${VERSION}/site-packages
-rm -rf pip/ "pip-*.dist-info/"
+rm -rf pip/ README.txt
 
 # Zip the distribution
 cd $UNPACK_DIR/python/install
@@ -62,7 +62,7 @@ mv python-linux.tar.gz $REPO_ROOT/
 cd $REPO_ROOT
 rm -rf python-windows python-windows.zip
 unzip -d python-windows windows/python-${VERSION}*-embed-amd64.zip
-cd $LIB_DIR/python${VERSION}/site-packages
-zip -r $REPO_ROOT/python-windows/python${VERSION//./} *
+cp -r $LIB_DIR/python${VERSION}/site-packages $REPO_ROOT/python-windows/
 cd $REPO_ROOT/python-windows
+echo "site-packages" >> python${VERSION//./}._pth
 zip -r $REPO_ROOT/python-windows.zip .
