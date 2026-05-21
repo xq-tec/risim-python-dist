@@ -34,8 +34,9 @@ find -name '*.dist-info' -exec rm -rf {} +
 
 cd $LIB_DIR
 strip libpython${VERSION}.so.1.0
-# In lib/: keep only libpython${VERSION}.so.1.0 and python${VERSION}/
+# In lib/: keep only libpythonX.Y.so, libpythonX.Y.so.1.0, and pythonX.Y/
 find . -mindepth 1 -maxdepth 1 \
+  ! -name libpython${VERSION}.so \
   ! -name libpython${VERSION}.so.1.0 \
   ! -name python${VERSION} \
   -exec rm -rf {} +
